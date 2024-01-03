@@ -5,9 +5,10 @@ import './index.css'
 import { BrowserRouter as Router } from 'react-router-dom'
 import { ChakraProvider } from '@chakra-ui/react'
 import { QueryClient, QueryClientProvider } from 'react-query'
-import ThreadsProvider from './services/ThreadsContex.tsx'
+import ThreadsProvider from './context/ThreadsContex.tsx'
 import { Provider } from 'react-redux'
 import {store} from './store/store.ts'
+
 
 const queryClient = new QueryClient()
 

@@ -1,15 +1,17 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slice/authSlice";
-import userReducer from "./slice/dataUserSlice";
-// import threadReducer from "./slice/ThreadSlice";
-import followsReducer from "./slice/followSlice";
+// import userReducer from "./slice/dataUserSlice";
+import threadReducer from "./slice/ThreadSlice";
+import detailUserReduder from "./slice/visitUserSlice";
+// import followsReducer from "./slice/followSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    dataUser: userReducer,
-    follows: followsReducer,
-    // thread: threadReducer,
+    detailUser: detailUserReduder,
+    // dataUser: userReducer,
+    // follows: followsReducer,
+    thread: threadReducer,
   },
 });
 

@@ -1,9 +1,10 @@
-import DetailLayout from "../Layout/DetaiLayout/DetailLayout";
+
+import MiddleSection from "../Layout/DetaiLayout/MiddleSectionDetails";
 
 const Details = () => {
   return (
     <div>
-        <DetailLayout/>
+        <MiddleSection/>
     </div>
   )
 }

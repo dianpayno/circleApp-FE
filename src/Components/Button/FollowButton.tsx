@@ -3,7 +3,7 @@ import { Button } from "@chakra-ui/react";
 
 type ButtonProps = {
     name: string
-    onClick?: () => void
+    onClick?: any
 }
 
 const FollowButton = (props: ButtonProps) => {

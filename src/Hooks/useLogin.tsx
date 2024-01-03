@@ -42,16 +42,16 @@ const useLogin = () => {
         const token = response.data.token;
         dispatch(LOGIN_SUKSES(token));
         saveDataUser(); 
+        if (token) {
+          localStorage.setItem("token", token);
+          navigate("/");
+        }
       } catch (err: any) {
+        console.log(err.response.data.message);
         setErrText(err.response.data.message);
         setShowToast(true);
       }
     },
-    {
-      onSuccess: () => {
-        navigate("/");
-      },
-    }
   );
   const saveDataUser = () => {
     const token: any = localStorage.getItem("token");

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-
+import { Navigate } from "react-router-dom";
 type AuthState = {
   id: number;
   username: string;
@@ -21,6 +21,7 @@ const initialState: AuthState = {
 };
 
 
+
 export const authSlice = createSlice({
   name: "auth",
   initialState: initialState,
@@ -38,6 +39,7 @@ export const authSlice = createSlice({
     USER_LOGOUT: () => {
       localStorage.removeItem("token");
       window.location.reload();
+      
     }
   },
 });

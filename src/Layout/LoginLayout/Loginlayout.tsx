@@ -12,6 +12,7 @@ import { useState } from "react";
 import { FaRegEye } from "react-icons/fa";
 import { FaRegEyeSlash } from "react-icons/fa";
 import uselogin from "../../Hooks/useLogin";
+import { Link } from "react-router-dom";
 
 const Loginlayout = () => {
   const [show, setShow] = useState(false);
@@ -90,7 +91,9 @@ const Loginlayout = () => {
             </Button>
             <Box display={"flex"} justifyContent={"center"} gap={"1"}>
               <Text fontSize={"xs"}>Don't have an account yet?</Text>
+              <Link to={"/register"}>
               <Text fontSize={"xs"}>Sign up</Text>
+              </Link>
             </Box>
           </form>
         </Box>

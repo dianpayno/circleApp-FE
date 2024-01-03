@@ -1,11 +1,13 @@
 import { useQuery, useMutation } from "react-query";
 import { api } from "../libs/api";
-import { useSelector } from "react-redux";
+import { useState } from "react";
+
 
 
 
 const useFollows = () => {
-  const user = useSelector((state: any) => state.auth);
+
+  const [userId, setUserId] = useState<number>(0);
 
 
 
@@ -13,6 +15,41 @@ const useFollows = () => {
   const headers = {
     Authorization: `Bearer ${token}`,
   };
+
+const {data:dataFollowing, refetch:dataFollowingrefetch} = useQuery("following",
+async ()=>{
+  try{
+    const response = await api.get("/following", { headers })
+    return response.data.data
+   
+  }
+  catch(error){
+    console.log(error)
+  }
+  })
+
+  const {data:dataFollowers}= useQuery("followers", 
+  async ()=>{
+    try {
+      const res = await api.get("/followers", {headers})
+      return res.data.data
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  )
+
+ const {data:SuggestUser }= useQuery ("SuggestUser",
+   async ()=>{
+     try {
+       const res = await api.get("/suggest", { headers });
+       return res.data.data;
+     } catch (error) {
+       console.log("ini error", error);
+     }
+   }
+ )
+  
 
   const {
     data: dataAllUsers,
@@ -32,7 +69,7 @@ const useFollows = () => {
     {
       onSuccess: () => {
         {
-          refecthAllUser();
+          // refecthAllUser();
         }
       },
     }
@@ -40,11 +77,10 @@ const useFollows = () => {
 
 
   const { data: UserById, refetch: refetchUserbyId } = useQuery(
-    ["UserById", user?.id],
+    "UserById",
     async () => {
       try {
-        const res = await api.get(`/users/${user?.id}`, { headers });
-      
+        const res = await api.get(`/detailuser`, { headers });
         return res.data.data;
       } catch (error) {
         console.log("ini error", error);
@@ -53,11 +89,25 @@ const useFollows = () => {
     {
       onSuccess: () => {
         {
-          refecthAllUser();
+          // refecthAllUser();
         }
       },
     }
   );
+
+const {data:getSpesificUser} = useQuery("getSpesificUser", async ()=>{
+        try {
+          if (userId !== 0) {
+            const res = await api.get(`/detailusers/${userId}`, { headers });
+            console.log(res.data.data)
+            return res.data.data
+          }
+        } catch (error) {
+          console.log("ini error", error);
+        }
+      })
+
+ 
 
   const { mutate: followUser } = useMutation(
     async (data: any) => {
@@ -73,7 +123,7 @@ const useFollows = () => {
         {
           refecthAllUser();
           refetchUserbyId();
-          console.log("add success");
+          dataFollowingrefetch();
         }
       },
     }
@@ -82,7 +132,9 @@ const useFollows = () => {
   const { mutate: unFollowUser } = useMutation(async (data: any) => {
     try {
       const res = await api.delete(`/follows/${data}`, { headers });
-      return res.data.data;
+      console.log(res.data.data);
+      // return res.data.data;
+
     } catch (error) {
       console.log("ini error", error);
     }
@@ -95,7 +147,9 @@ const useFollows = () => {
       }
     }
   });
-  return { dataAllUsers, refecthAllUser, followUser, unFollowUser, UserById };
+  return { 
+    dataFollowers, getSpesificUser,setUserId, userId,
+    dataAllUsers, refecthAllUser, followUser, unFollowUser, UserById, SuggestUser, dataFollowing, refetchUserbyId };
 };
 
 export default useFollows;

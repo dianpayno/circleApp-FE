@@ -2,44 +2,25 @@ import { Box, Text, Avatar } from "@chakra-ui/react";
 import FollowButton from "../Button/FollowButton";
 import { useEffect, useState } from "react";
 import useFollows from "../../Hooks/useFollows";
-import { useAppSelector, useAppDispatch } from "../../store/hooks";
-import { RootState } from "../../store/store";
-import { getAllUser } from "../../store/slice/dataUserSlice";
 
-type dataInput = {
-  userId: number;
-  followingId: number;
-};
 const SuggestionCard = () => {
-  const { followUser, unFollowUser, dataAllUsers, refecthAllUser } = useFollows();
+  const { followUser, unFollowUser, SuggestUser, dataFollowing } = useFollows();
+  const [active, setActive] = useState<number>(-1);
 
-  const [data, setData] = useState<any>([]);
+  const handleFollow = (data: any, index: number) => {
+    followUser(data);
+    setActive(index);
+  };
+  const handleUnFollow = (data: any) => {
+    unFollowUser(data);
+    setActive(-1);
+  }
 
-  const user = useAppSelector((state: RootState) => state.auth);
-  // const dispatch = useAppDispatch();
-  // const allUsers = useAppSelector(
-  //   (state: RootState) => state.dataUser.data?.data
-  // );
-
-  useEffect(() => {
-    console.log(dataAllUsers);
-    
-  })
-
-
-  useEffect(() => {
-    const filterUser = dataAllUsers?.filter((item: any) => item.id !== user.id);
-    const getNotFollowing = filterUser?.filter((item: any) => {
-      const contains = item.following?.map((data: any) => data.userId);
-      if (contains?.includes(user.id) === false) {
-        return item;
-      }
-    });
-    setData(getNotFollowing);
-  }, [dataAllUsers,refecthAllUser,user.id]);
- 
-
-
+  // useEffect(() => {
+  //   if (dataFollowing) {
+  //     setActive(-1);
+  //   }
+  // }, [dataFollowing]);
 
   return (
     <Box
@@ -53,14 +34,18 @@ const SuggestionCard = () => {
       <Text color={"white"} fontSize={"md"} fontWeight={"bold"}>
         Suggestion for you
       </Text>
-      {dataAllUsers?.map((item: any) => {
-        const follows: dataInput = {
-          userId: user.id,
+      {SuggestUser?.map((item: any, index: number) => {
+        const data = {
           followingId: item.id,
         };
-        const isFollowed = item.following?.filter((item: any) => {
-          if (item.userId === user.id) {
-            return item;
+        const isactive = active === index;
+        const sameData = dataFollowing?.filter((data: any) => {
+          return data.user.id === SuggestUser?.[index].id;
+        });
+
+        const idFollows = dataFollowing?.filter((data: any) => {
+          if (data.user.id === item.id) {
+            return data;
           }
         });
 
@@ -97,13 +82,26 @@ const SuggestionCard = () => {
                 </Text>
               </Box>
             </Box>
-            {isFollowed.length > 0 ? (
+            {isactive ? (
+              // dataFollowing?.map ((data: any) => {
+              //   return data.user.id === item.id ? (
+              //     <FollowButton
+              //       name="following"
+              //       onClick={() => unFollowUser(item.id)}
+              //     />
+              //   ) : (
+              //     <FollowButton
+              //       name="follow"
+              //       onClick={() => handleFollow(data)}
+              //     />
+              //   )
+              // })
               <FollowButton
                 name="following"
-                onClick={() => unFollowUser(isFollowed[0].id)}
+                onClick={() => handleUnFollow(idFollows?.[0]?.id)}
               />
             ) : (
-              <FollowButton name="follow" onClick={() => followUser(follows)} />
+              <FollowButton name="follow" onClick={() => handleFollow(data, index)} />
             )}
           </Box>
         );

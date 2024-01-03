@@ -1,9 +1,9 @@
-import { Box, Text, Avatar, Image, Input, Button } from "@chakra-ui/react";
+import { Box, Text, Avatar,  Input,} from "@chakra-ui/react";
 import { IoHeartSharp } from "react-icons/io5";
 import { AiOutlineComment } from "react-icons/ai";
 import { IoIosHeartEmpty } from "react-icons/io";
-import { MdAddPhotoAlternate } from "react-icons/md";
-import { useState, useRef, useEffect } from "react";
+import { IoIosSend } from "react-icons/io";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import ReplyCard from "./ReplyCard";
 import { costumDate } from "../../utils/FormatDate";
@@ -11,36 +11,45 @@ import { useSelector } from "react-redux";
 import useLikes from "../../Hooks/useLikes";
 import { useMutation } from "react-query";
 import { api } from "../../libs/api";
-import { useThreads } from "../../services/ThreadsContex";
+import { useThreads } from "../../context/ThreadsContex";
+import GridLayout3 from "../GridPost/GridLayout3";
+import GridLayout4 from "../GridPost/GridLayout4";
+import GridLayoutMore from "../GridPost/GridLayoutMore";
+import GridLayout2 from "../GridPost/GridLayout2";
+import GridLayout1 from "../GridPost/GridLayout1";
+import { IoIosCloseCircle } from "react-icons/io";
+import { Modal, ModalBody, ModalContent, ModalOverlay } from "@chakra-ui/react";
+import { useDisclosure } from "@chakra-ui/react";
+import ModalDetailImage from "./ModalDetailImage";
+import useFollows from "../../Hooks/useFollows";
+import ActionMenu from "./ActionMenu";
 
 type Props = {
   item: any;
+  refetchThreadsById: () => void;
 };
 
 type Reply = {
   content: string;
-  image: string;
-  userId: number;
   threadId: number;
 };
 
-const StatusCard = (props: Props) => {
+const DetailPostCard = (props: Props) => {
   const { item } = props;
-  const [image, setImage] = useState(null);
-  const imageRef = useRef<HTMLInputElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpened, setIsOpened] = useState(false);
   const timeStamp = costumDate(item?.posted_at);
   const user = useSelector((state: any) => state.auth);
   const [idLike, setIdLike] = useState(0);
   const { addLikes, deleteLikes, setinputLike, inputlike, like, setLike } =
     useLikes();
-    const {refetchThreads} = useThreads()
+    const {UserById} = useFollows();
+  const { refetchThreads } = useThreads();
   const [reply, setReply] = useState<Reply>({
     content: "",
-    image: "",
-    userId: user.id,
     threadId: 0,
   });
+
+ 
 
   useEffect(() => {
     setinputLike({
@@ -48,7 +57,9 @@ const StatusCard = (props: Props) => {
       userId: user.id,
       threadId: item?.id,
     });
-  });
+  }, [item]);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const sortedReply = item?.replies?.sort((a: any, b: any) => {
     return b.id - a.id;
@@ -68,7 +79,7 @@ const StatusCard = (props: Props) => {
         setIdLike(item.id);
       }
     });
-  });
+  }, [item?.likes, item]);
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setReply({
@@ -79,23 +90,24 @@ const StatusCard = (props: Props) => {
   };
 
   const { mutate: addReply } = useMutation(
-    async (e: any) => {
-      e.preventDefault();
+    async () => {
       try {
-        await api.post("/replies", reply);
+        const token = localStorage.getItem("token");
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+        await api.post("/replies", reply, { headers });
       } catch (err) {
         console.log(err);
       }
     },
     {
       onSuccess: () => {
-        setIsOpen(false);
         refetchThreads();
-
+        setIsOpened(false);
         setReply({
           content: "",
-          image: "",
-          userId: user.id,
           threadId: 0,
         });
       },
@@ -104,7 +116,7 @@ const StatusCard = (props: Props) => {
 
   return (
     <Box>
-      <Box display={"flex"} marginTop={"10"} color={"white"} gap={"3"}>
+      <Box display={"flex"} marginTop={"10"} color={"white"} gap={"3"} position={"relative"}>
         <Avatar
           name={item?.user.full_name}
           size={"sm"}
@@ -129,20 +141,25 @@ const StatusCard = (props: Props) => {
             </Text>
           </Box>
         </Box>
+        {
+          item?.userId === user.id &&
+        <Box className="absolute right-2 top-2 z-50">
+         <ActionMenu id={item?.id}/>
+        </Box>
+        }
       </Box>
       <Box marginY={"2"}>
         <Text color={"white"} fontSize={"xs"}>
           {item?.content}
         </Text>
       </Box>
-      {item?.image && (
-        <Image
-          objectFit="cover"
-          borderRadius={"lg"}
-          src={item.image}
-          alt="Dan Abramov"
-        />
-      )}
+      <Box onClick={onOpen} cursor={"pointer"}>
+        {item?.image.length === 3 && <GridLayout3 dataImage={item?.image} />}
+        {item?.image.length === 4 && <GridLayout4 dataImage={item?.image} />}
+        {item?.image.length > 4 && <GridLayoutMore dataImage={item?.image} />}
+        {item?.image.length === 2 && <GridLayout2 dataImage={item?.image} />}
+        {item?.image.length === 1 && <GridLayout1 dataImage={item?.image} />}
+      </Box>
       {/* created post */}
       <Box color={"gray"} display={"flex"} gap={"1"} marginTop={"2"}>
         <Text fontSize={"xs"}>{timeStamp}</Text>
@@ -157,9 +174,8 @@ const StatusCard = (props: Props) => {
               onClick={() => deleteLikes(idLike)}
               color={"red"}
             />
-          ) }{
-            
-          !like && (
+          )}
+          {!like && (
             <IoIosHeartEmpty
               cursor={"pointer"}
               size={20}
@@ -176,6 +192,48 @@ const StatusCard = (props: Props) => {
           <Text fontSize={"xs"} color={"gray"}>
             {item?.replies?.length} Replies
           </Text>
+        </Box>
+      </Box>
+      <Box display={"flex"} gap={"2"} my={"3"}>
+        <Avatar
+          size={"sm"}
+          name={UserById?.full_name}
+          src={UserById?.profile_picture}
+        />
+        <Box width={"100%"} display={"flex"} flexDirection={"column"}>
+          {!isOpened ? (
+            <Box display={"flex"} alignItems={"center"}>
+              <Box className="w-[60%]">
+                <Input
+                  onFocus={() => setIsOpened(true)}
+                  fontSize={"xs"}
+                  height={"10"}
+                  variant="unstyled"
+                  placeholder="Add a comment for this post"
+                />
+              </Box>
+            </Box>
+          ) : (
+            <motion.div
+              className="w-full rounded-lg px-2 bg-white overflow-hidden"
+              initial={{ y: -5, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+            >
+              <div className="flex justify-center items-center gap-1">
+                <textarea
+                  onChange={handleChange}
+                  value={reply.content}
+                  autoFocus
+                  name="content"
+                  rows={1}
+                  className=" bg-white text-sm focus:border-none focus:outline-none p-2 w-full resize-none"
+                  placeholder="Type your comment..."
+                />
+
+                <IoIosSend size={20} onClick={addReply} />
+              </div>
+            </motion.div>
+          )}
         </Box>
       </Box>
       {item?.replies?.length === 0 && (
@@ -195,73 +253,6 @@ const StatusCard = (props: Props) => {
         </>
       )}
       {/* kolom komentar */}
-      <Box display={"flex"} gap={"2"} my={"3"}>
-        <Avatar size={"sm"} name={user.fullname} src={user.profile_picture} />
-        <Box width={"100%"} display={"flex"} flexDirection={"column"}>
-          {!isOpen ? (
-            <Box display={"flex"} alignItems={"center"}>
-              <Box className="w-[60%]">
-                <Input
-                  onFocus={() => setIsOpen(true)}
-                  fontSize={"xs"}
-                  height={"10"}
-                  variant="unstyled"
-                  placeholder="Add a comment for this post"
-                />
-              </Box>
-            </Box>
-          ) : (
-            <motion.div
-              className="w-full rounded-lg bg-[#1B1B1B] overflow-hidden"
-              initial={{ y: -5, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-            >
-              <form onSubmit={addReply}>
-                <textarea
-                  onChange={handleChange}
-                  value={reply.content}
-                  autoFocus
-                  name="content"
-                  rows={1}
-                  className="text-white bg-[#1B1B1B] text-sm focus:border-none focus:outline-none p-3 w-full resize-none"
-                  placeholder="Type your comment..."
-                />
-                <Box
-                  className={`flex items-center 
-                  justify-between
-                 py-3 px-3 w-full`}
-                >
-                  {image ? (
-                    <Image
-                      boxSize={"30px"}
-                      objectFit={"cover"}
-                      borderRadius={"md"}
-                      src={image}
-                      alt="mage"
-                    />
-                  ) : (
-                    <MdAddPhotoAlternate size={30} className="text-green-500" />
-                  )}
-                  <Box display={"flex"} gap={"1"} alignItems={"center"}>
-                    <input name="image" ref={imageRef} type="file" hidden />
-                    <Button
-                      colorScheme="whatsapp"
-                      borderRadius={"lg"}
-                      size={"sm"}
-                      px={"3"}
-                      py={"3"}
-                      fontSize={"xs"}
-                      type="submit"
-                    >
-                      Post
-                    </Button>
-                  </Box>
-                </Box>
-              </form>
-            </motion.div>
-          )}
-        </Box>
-      </Box>
 
       {sortedReply &&
         sortedReply?.map((item: any, index: number) => (
@@ -269,8 +260,30 @@ const StatusCard = (props: Props) => {
             <ReplyCard data={item} />
           </Box>
         ))}
+      <Modal
+        size={"3xl"}
+        blockScrollOnMount={true}
+        scrollBehavior={"inside"}
+        isOpen={isOpen}
+        onClose={onClose}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <Box display={"flex"} justifyContent={"flex-end"} m={2}>
+            <IoIosCloseCircle
+              color={"gray"}
+              cursor={"pointer"}
+              size={30}
+              onClick={onClose}
+            />
+          </Box>
+          <ModalBody>
+            <ModalDetailImage image={item?.image} />
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
 
-export default StatusCard;
+export default DetailPostCard;

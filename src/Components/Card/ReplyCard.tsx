@@ -1,43 +1,42 @@
 import { Box, Text, Avatar } from "@chakra-ui/react";
 
-import { useState } from "react";
-import{ useQuery} from "react-query"
+import { useQuery } from "react-query";
 import { api } from "../../libs/api";
-import {formatDate} from "../../utils/FormatDate"
+import { formatDate } from "../../utils/FormatDate";
 
 type Props = {
-    data:any
-}
+  data: any;
+};
 
 const ReplyCard = (props: Props) => {
-  const {data} = props
+  const { data } = props;
 
-
-
-const {data:userData, refetch}= useQuery(["userData",data.id],async()=>{
-  try{
-    const response = await api.get(`/replies/${data.id}`);
-    return response.data.data
-  }
-  catch(err){
-    console.log(err);
-  }
-},{
-  onSuccess: ()=>{
-    refetch()
-  }
-})
-
-
-
-
-
+  const { data: userData, refetch } = useQuery(
+    ["userData", data.id],
+    async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        }
+        const response = await api.get(`/replies/${data.id}`, { headers });
+        return response.data.data;
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    {
+      onSuccess: () => {
+        refetch();
+      },
+    }
+  );
 
   return (
     <Box display={"flex"} color={"white"} gap={"2"}>
       <Avatar
         size={"sm"}
-        src={userData?.user?.image}
+        src={userData?.user?.profile_picture}
         name={userData?.user?.full_name}
       />
 
@@ -56,7 +55,7 @@ const {data:userData, refetch}= useQuery(["userData",data.id],async()=>{
             textTransform={"lowercase"}
             color="gray"
           >
-         @{userData?.user?.username}
+            @{userData?.user?.username}
           </Text>
           <Text fontSize={"xs"} color={"gray"}>
             •
@@ -71,9 +70,7 @@ const {data:userData, refetch}= useQuery(["userData",data.id],async()=>{
           </Text>
         </Box>
         <Box marginY={"1"}>
-          <Text fontSize={"xs"}>
-            {data.content}
-          </Text>
+          <Text fontSize={"xs"}>{data.content}</Text>
         </Box>
 
         {/* <Image
